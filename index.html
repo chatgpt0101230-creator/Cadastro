@@ -230,6 +230,10 @@ Cadastrar Boleto
 📥 Fazer Backup
 </button>
 
+<button onclick="restaurarDaNuvem()">
+☁ Restaurar da Nuvem
+</button>
+    
 <br><br>
 
 <input type="file" id="importar" onchange="importarBackup(event)">
@@ -239,7 +243,10 @@ Cadastrar Boleto
 </div>
 
 <script>
-
+    
+const API =
+"https://script.google.com/macros/s/AKfycbzc-ddF_lu4GLIgLKbqBG0xVyV7hq_diSFDrnqgnsPwoMN9tJfG0j201sRy9ekhhdWb7w/exec";
+    
 let boletos =
 JSON.parse(localStorage.getItem("boletos")) || [];
 
@@ -250,6 +257,27 @@ JSON.stringify(boletos)
 );
 }
 
+async function salvarNaNuvem(boleto){
+
+try{
+
+await fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(boleto)
+});
+
+console.log("Salvo na nuvem");
+
+}catch(erro){
+
+console.log("Erro:",erro);
+
+}
+
+}
 function adicionarBoleto(){
 
 const nome =
@@ -271,14 +299,18 @@ alert("Preencha todos os campos");
 return;
 }
 
-boletos.push({
+const novoBoleto = {
 id:Date.now(),
 nome,
 valor,
 vencimento,
 mes,
 pago:false
-});
+};
+
+boletos.push(novoBoleto);
+
+salvarNaNuvem(novoBoleto);
 
 salvar();
 listarBoletos();
@@ -460,7 +492,32 @@ alert("Backup restaurado!");
 
 leitor.readAsText(arquivo);
 }
+async function restaurarDaNuvem(){
 
+try{
+
+const resposta =
+await fetch(API);
+
+const dados =
+await resposta.json();
+
+console.log(dados);
+
+alert(
+"Foram encontrados "
++ (dados.length - 1)
++ " registros."
+);
+
+}catch(erro){
+
+alert("Erro ao restaurar");
+
+}
+
+}
+    
 listarBoletos();
 
 </script>
