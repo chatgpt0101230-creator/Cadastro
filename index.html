@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Boletos 2026</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#f4f4f4;
+    padding:15px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:15px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+input,select,button{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+button{
+    background:#1976d2;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+.resumo{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:10px;
+}
+
+.box{
+    padding:12px;
+    border-radius:8px;
+    color:white;
+    text-align:center;
+}
+
+.pago{
+    background:#2e7d32;
+}
+
+.aberto{
+    background:#1565c0;
+}
+
+.vencido{
+    background:#c62828;
+}
+
+.lista{
+    margin-top:10px;
+}
+
+.boleto{
+    background:white;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+    border-left:6px solid #1565c0;
+}
+
+.boleto.vencido{
+    border-left-color:red;
+    background:#fff5f5;
+}
+
+.boleto.pago{
+    border-left-color:green;
+    background:#f1fff1;
+}
+
+.acoes{
+    display:flex;
+    gap:5px;
+    margin-top:10px;
+}
+
+.acoes button{
+    flex:1;
+}
+
+.btnPago{
+    background:green;
+}
+
+.btnExcluir{
+    background:red;
+}
+
+.alerta{
+    background:#fff3cd;
+    color:#856404;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>📄 Controle de Boletos 2026</h1>
+
+<div id="alertas"></div>
+
+<div class="card">
+<h2>Cadastrar Boleto</h2>
+
+<input type="text" id="nome" placeholder="Nome do boleto">
+
+<input type="number" id="valor" placeholder="Valor">
+
+<input type="date" id="vencimento">
+
+<select id="mes">
+<option>Janeiro</option>
+<option>Fevereiro</option>
+<option>Março</option>
+<option>Abril</option>
+<option>Maio</option>
+<option>Junho</option>
+<option>Julho</option>
+<option>Agosto</option>
+<option>Setembro</option>
+<option>Outubro</option>
+<option>Novembro</option>
+<option>Dezembro</option>
+</select>
+
+<button onclick="adicionarBoleto()">
+Cadastrar Boleto
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>Resumo Financeiro</h2>
+
+<div class="resumo">
+
+<div class="box pago">
+<h3 id="totalPago">R$ 0,00</h3>
+<small>Total Pago</small>
+</div>
+
+<div class="box aberto">
+<h3 id="totalAberto">R$ 0,00</h3>
+<small>Em Aberto</small>
+</div>
+
+<div class="box vencido">
+<h3 id="totalVencido">R$ 0,00</h3>
+<small>Vencidos</small>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Filtrar Mês</h2>
+
+<select id="filtroMes" onchange="listarBoletos()">
+<option value="">Todos</option>
+<option>Janeiro</option>
+<option>Fevereiro</option>
+<option>Março</option>
+<option>Abril</option>
+<option>Maio</option>
+<option>Junho</option>
+<option>Julho</option>
+<option>Agosto</option>
+<option>Setembro</option>
+<option>Outubro</option>
+<option>Novembro</option>
+<option>Dezembro</option>
+</select>
+
+</div>
+
+<div class="card">
+
+<h2>Boletos</h2>
+
+<div id="lista" class="lista"></div>
+
+</div>
+
+<div class="card">
+
+<h2>Backup</h2>
+
+<button onclick="exportarBackup()">
+📥 Fazer Backup
+</button>
+
+<br><br>
+
+<input type="file" id="importar" onchange="importarBackup(event)">
+
+</div>
+
+</div>
+
+<script>
+
+let boletos =
+JSON.parse(localStorage.getItem("boletos")) || [];
+
+function salvar(){
+localStorage.setItem(
+"boletos",
+JSON.stringify(boletos)
+);
+}
+
+function adicionarBoleto(){
+
+const nome =
+document.getElementById("nome").value;
+
+const valor =
+parseFloat(
+document.getElementById("valor").value
+);
+
+const vencimento =
+document.getElementById("vencimento").value;
+
+const mes =
+document.getElementById("mes").value;
+
+if(!nome || !valor || !vencimento){
+alert("Preencha todos os campos");
+return;
+}
+
+boletos.push({
+id:Date.now(),
+nome,
+valor,
+vencimento,
+mes,
+pago:false
+});
+
+salvar();
+listarBoletos();
+
+document.getElementById("nome").value="";
+document.getElementById("valor").value="";
+document.getElementById("vencimento").value="";
+}
+
+function marcarPago(id){
+
+const boleto =
+boletos.find(b=>b.id===id);
+
+boleto.pago = !boleto.pago;
+
+salvar();
+listarBoletos();
+}
+
+function excluirBoleto(id){
+
+if(!confirm("Excluir boleto?")) return;
+
+boletos =
+boletos.filter(
+b=>b.id!==id
+);
+
+salvar();
+listarBoletos();
+}
+
+function listarBoletos(){
+
+const lista =
+document.getElementById("lista");
+
+const filtro =
+document.getElementById("filtroMes").value;
+
+lista.innerHTML="";
+
+let pago=0;
+let aberto=0;
+let vencido=0;
+let qtdVencidos=0;
+
+const hoje =
+new Date();
+
+boletos.forEach(b=>{
+
+if(filtro && b.mes!==filtro) return;
+
+const dataVenc =
+new Date(b.vencimento);
+
+const atrasado =
+!b.pago && dataVenc < hoje;
+
+if(b.pago){
+pago += b.valor;
+}else{
+aberto += b.valor;
+}
+
+if(atrasado){
+vencido += b.valor;
+qtdVencidos++;
+}
+
+const div =
+document.createElement("div");
+
+div.className =
+"boleto " +
+(b.pago ? "pago" :
+(atrasado ? "vencido":""));
+
+div.innerHTML=`
+<strong>${b.nome}</strong><br>
+Valor: R$ ${b.valor.toFixed(2)}<br>
+Vencimento: ${b.vencimento}<br>
+Mês: ${b.mes}<br>
+Status:
+${b.pago ? "✅ Pago" :
+(atrasado ? "⚠️ Vencido":"⏳ Em aberto")}
+
+<div class="acoes">
+<button class="btnPago"
+onclick="marcarPago(${b.id})">
+${b.pago ? "Desfazer":"Marcar Pago"}
+</button>
+
+<button class="btnExcluir"
+onclick="excluirBoleto(${b.id})">
+Excluir
+</button>
+</div>
+`;
+
+lista.appendChild(div);
+
+});
+
+document.getElementById(
+"totalPago"
+).innerText =
+"R$ "+pago.toFixed(2);
+
+document.getElementById(
+"totalAberto"
+).innerText =
+"R$ "+aberto.toFixed(2);
+
+document.getElementById(
+"totalVencido"
+).innerText =
+"R$ "+vencido.toFixed(2);
+
+const alerta =
+document.getElementById("alertas");
+
+if(qtdVencidos>0){
+alerta.innerHTML=`
+<div class="alerta">
+⚠️ Você possui
+${qtdVencidos}
+boleto(s) vencido(s).
+</div>`;
+}else{
+alerta.innerHTML="";
+}
+
+}
+
+function exportarBackup(){
+
+const blob =
+new Blob(
+[JSON.stringify(boletos)],
+{type:"application/json"}
+);
+
+const a =
+document.createElement("a");
+
+a.href =
+URL.createObjectURL(blob);
+
+a.download =
+"backup-boletos.json";
+
+a.click();
+}
+
+function importarBackup(event){
+
+const arquivo =
+event.target.files[0];
+
+if(!arquivo) return;
+
+const leitor =
+new FileReader();
+
+leitor.onload =
+function(e){
+
+boletos =
+JSON.parse(e.target.result);
+
+salvar();
+listarBoletos();
+
+alert("Backup restaurado!");
+};
+
+leitor.readAsText(arquivo);
+}
+
+listarBoletos();
+
+</script>
+
+</body>
+</html>
