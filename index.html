@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Boletos 2026</title>
+
+<title>Sistema de Boletos</title>
 
 <style>
+
 *{
     margin:0;
     padding:0;
@@ -14,511 +16,812 @@
 }
 
 body{
-    background:#f4f4f4;
-    padding:15px;
+    background:#f2f4f8;
+    padding:20px;
 }
 
 .container{
-    max-width:1000px;
+    max-width:1200px;
     margin:auto;
 }
 
-h1{
-    text-align:center;
-    margin-bottom:15px;
+.topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.topo h1{
+    color:#222;
+}
+
+.tabs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.tab-btn{
+    background:#ddd;
+    border:none;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.tab-btn.active{
+    background:#2563eb;
+    color:white;
+}
+
+.aba{
+    display:none;
+}
+
+.aba.active{
+    display:block;
 }
 
 .card{
     background:white;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
+    border-radius:15px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-input,select,button{
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+}
+
+input, select{
     width:100%;
-    padding:10px;
-    margin-top:8px;
+    padding:12px;
+    border-radius:10px;
     border:1px solid #ccc;
-    border-radius:5px;
 }
 
 button{
-    background:#1976d2;
-    color:white;
     border:none;
+    padding:12px 18px;
+    border-radius:10px;
     cursor:pointer;
+    font-weight:bold;
 }
 
-button:hover{
-    opacity:.9;
-}
-
-.resumo{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:10px;
-}
-
-.box{
-    padding:12px;
-    border-radius:8px;
+.btn-salvar{
+    background:#16a34a;
     color:white;
-    text-align:center;
+}
+
+.status-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.status{
+    padding:20px;
+    border-radius:15px;
+    color:white;
 }
 
 .pago{
-    background:#2e7d32;
+    background:#16a34a;
 }
 
-.aberto{
-    background:#1565c0;
+.pendente{
+    background:#eab308;
+    color:black;
 }
 
 .vencido{
-    background:#c62828;
+    background:#dc2626;
 }
 
-.lista{
-    margin-top:10px;
+table{
+    width:100%;
+    border-collapse:collapse;
 }
 
-.boleto{
-    background:white;
-    padding:10px;
-    margin-bottom:10px;
-    border-radius:8px;
-    border-left:6px solid #1565c0;
+th, td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+    text-align:left;
 }
 
-.boleto.vencido{
-    border-left-color:red;
-    background:#fff5f5;
-}
-
-.boleto.pago{
-    border-left-color:green;
-    background:#f1fff1;
+th{
+    background:#2563eb;
+    color:white;
 }
 
 .acoes{
     display:flex;
-    gap:5px;
-    margin-top:10px;
+    gap:8px;
+    flex-wrap:wrap;
 }
 
-.acoes button{
-    flex:1;
+.btn-pago{
+    background:#16a34a;
+    color:white;
 }
 
-.btnPago{
-    background:green;
+.btn-excluir{
+    background:#dc2626;
+    color:white;
 }
 
-.btnExcluir{
-    background:red;
+.btn-backup{
+    background:#2563eb;
+    color:white;
 }
 
-.alerta{
-    background:#fff3cd;
-    color:#856404;
-    padding:10px;
-    border-radius:8px;
+.btn-restaurar{
+    background:#7c3aed;
+    color:white;
+}
+
+.filtro{
     margin-bottom:15px;
 }
+
+@media(max-width:768px){
+
+    table{
+        font-size:13px;
+    }
+
+}
+
 </style>
 </head>
 <body>
 
 <div class="container">
 
-<h1>📄 Controle de Boletos 2026</h1>
+    <div class="topo">
 
-<div id="alertas"></div>
+        <h1>📄 Sistema de Cadastro de Boletos</h1>
 
-<div class="card">
-<h2>Cadastrar Boleto</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
 
-<input type="text" id="nome" placeholder="Nome do boleto">
+            <button class="btn-backup" onclick="fazerBackup()">
+                📥 Fazer Backup
+            </button>
 
-<input type="number" id="valor" placeholder="Valor">
+            <button class="btn-restaurar"
+                onclick="document.getElementById('restaurarBackup').click()">
+                📤 Restaurar Backup
+            </button>
 
-<input type="date" id="vencimento">
+            <input
+                type="file"
+                id="restaurarBackup"
+                accept=".json"
+                style="display:none"
+                onchange="restaurarBackup(event)"
+            >
 
-<select id="mes">
-<option>Janeiro</option>
-<option>Fevereiro</option>
-<option>Março</option>
-<option>Abril</option>
-<option>Maio</option>
-<option>Junho</option>
-<option>Julho</option>
-<option>Agosto</option>
-<option>Setembro</option>
-<option>Outubro</option>
-<option>Novembro</option>
-<option>Dezembro</option>
-</select>
+        </div>
 
-<button onclick="adicionarBoleto()">
-Cadastrar Boleto
-</button>
+    </div>
 
-</div>
+    <div class="tabs">
 
-<div class="card">
+        <button class="tab-btn active"
+            onclick="abrirAba(event,'cadastro')">
+            Cadastro de Boletos
+        </button>
 
-<h2>Resumo Financeiro</h2>
+        <button class="tab-btn"
+            onclick="abrirAba(event,'historico')">
+            Histórico
+        </button>
 
-<div class="resumo">
+    </div>
 
-<div class="box pago">
-<h3 id="totalPago">R$ 0,00</h3>
-<small>Total Pago</small>
-</div>
+    <!-- ABA CADASTRO -->
+    <div id="cadastro" class="aba active">
 
-<div class="box aberto">
-<h3 id="totalAberto">R$ 0,00</h3>
-<small>Em Aberto</small>
-</div>
+        <div class="card">
 
-<div class="box vencido">
-<h3 id="totalVencido">R$ 0,00</h3>
-<small>Vencidos</small>
-</div>
+            <h2>Adicionar Boleto</h2>
 
-</div>
+            <br>
 
-</div>
+            <div class="form-grid">
 
-<div class="card">
+                <input type="text"
+                    id="nome"
+                    placeholder="Nome do boleto">
 
-<h2>Filtrar Mês</h2>
+                <input type="number"
+                    id="valor"
+                    placeholder="Valor">
 
-<select id="filtroMes" onchange="listarBoletos()">
-<option value="">Todos</option>
-<option>Janeiro</option>
-<option>Fevereiro</option>
-<option>Março</option>
-<option>Abril</option>
-<option>Maio</option>
-<option>Junho</option>
-<option>Julho</option>
-<option>Agosto</option>
-<option>Setembro</option>
-<option>Outubro</option>
-<option>Novembro</option>
-<option>Dezembro</option>
-</select>
+                <input type="date"
+                    id="vencimento">
 
-</div>
+                <select id="status">
+                    <option value="Pendente">
+                        Pendente
+                    </option>
 
-<div class="card">
+                    <option value="Pago">
+                        Pago
+                    </option>
+                </select>
 
-<h2>Boletos</h2>
+                <button class="btn-salvar"
+                    onclick="adicionarBoleto()">
+                    Salvar Boleto
+                </button>
 
-<div id="lista" class="lista"></div>
+            </div>
 
-</div>
+        </div>
 
-<div class="card">
+        <div class="status-cards">
 
-<h2>Backup</h2>
+            <div class="status pago">
+                <h3>Boletos Pagos</h3>
+                <h1 id="totalPagos">0</h1>
+            </div>
 
-<button onclick="exportarBackup()">
-📥 Fazer Backup
-</button>
+            <div class="status pendente">
+                <h3>Boletos Pendentes</h3>
+                <h1 id="totalPendentes">0</h1>
+            </div>
 
-<button onclick="restaurarDaNuvem()">
-☁ Restaurar da Nuvem
-</button>
-    
-<br><br>
+            <div class="status vencido">
+                <h3>Boletos Vencidos</h3>
+                <h1 id="totalVencidos">0</h1>
+            </div>
 
-<input type="file" id="importar" onchange="importarBackup(event)">
+        </div>
 
-</div>
+        <div class="card">
+
+            <div class="filtro">
+
+                <label>
+                    <strong>Filtrar por mês:</strong>
+                </label>
+
+                <input
+                    type="month"
+                    id="filtroMes"
+                    onchange="renderizarBoletos()"
+                >
+
+            </div>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Boleto</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody id="listaBoletos"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- ABA HISTÓRICO -->
+    <div id="historico" class="aba">
+
+        <div class="card">
+
+            <h2>Histórico Geral</h2>
+
+            <br>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Boleto</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="historicoBoletos"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
 
 </div>
 
 <script>
-    
-const API =
-"https://script.google.com/macros/s/AKfycbzc-ddF_lu4GLIgLKbqBG0xVyV7hq_diSFDrnqgnsPwoMN9tJfG0j201sRy9ekhhdWb7w/exec";
-    
+
 let boletos =
 JSON.parse(localStorage.getItem("boletos")) || [];
 
-function salvar(){
-localStorage.setItem(
-"boletos",
-JSON.stringify(boletos)
-);
+/*
+=========================================
+ ABAS
+=========================================
+*/
+
+function abrirAba(event,id){
+
+    document.querySelectorAll(".aba")
+    .forEach(aba=>{
+        aba.classList.remove("active");
+    });
+
+    document.querySelectorAll(".tab-btn")
+    .forEach(btn=>{
+        btn.classList.remove("active");
+    });
+
+    document.getElementById(id)
+    .classList.add("active");
+
+    event.target.classList.add("active");
 }
 
-async function salvarNaNuvem(boleto){
+/*
+=========================================
+ ADICIONAR BOLETO
+=========================================
+*/
 
-try{
-
-await fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify(boleto)
-});
-
-console.log("Salvo na nuvem");
-
-}catch(erro){
-
-console.log("Erro:",erro);
-
-}
-
-}
 function adicionarBoleto(){
 
-const nome =
-document.getElementById("nome").value;
+    const nome =
+    document.getElementById("nome").value;
 
-const valor =
-parseFloat(
-document.getElementById("valor").value
-);
+    const valor =
+    document.getElementById("valor").value;
 
-const vencimento =
-document.getElementById("vencimento").value;
+    const vencimento =
+    document.getElementById("vencimento").value;
 
-const mes =
-document.getElementById("mes").value;
+    const status =
+    document.getElementById("status").value;
 
-if(!nome || !valor || !vencimento){
-alert("Preencha todos os campos");
-return;
+    if(!nome || !valor || !vencimento){
+
+        alert("Preencha todos os campos!");
+
+        return;
+    }
+
+    boletos.push({
+        nome,
+        valor,
+        vencimento,
+        status
+    });
+
+    salvarLocal();
+
+    enviarGoogleSheets();
+
+    limparCampos();
+
+    renderizarBoletos();
 }
 
-const novoBoleto = {
-id:Date.now(),
-nome,
-valor,
-vencimento,
-mes,
-pago:false
-};
+/*
+=========================================
+ LIMPAR CAMPOS
+=========================================
+*/
 
-boletos.push(novoBoleto);
+function limparCampos(){
 
-salvarNaNuvem(novoBoleto);
+    document.getElementById("nome").value = "";
 
-salvar();
-listarBoletos();
+    document.getElementById("valor").value = "";
 
-document.getElementById("nome").value="";
-document.getElementById("valor").value="";
-document.getElementById("vencimento").value="";
+    document.getElementById("vencimento").value = "";
 }
 
-function marcarPago(id){
+/*
+=========================================
+ SALVAR LOCAL
+=========================================
+*/
 
-const boleto =
-boletos.find(b=>b.id===id);
+function salvarLocal(){
 
-boleto.pago = !boleto.pago;
-
-salvar();
-listarBoletos();
+    localStorage.setItem(
+        "boletos",
+        JSON.stringify(boletos)
+    );
 }
 
-function excluirBoleto(id){
+/*
+=========================================
+ RENDERIZAR
+=========================================
+*/
 
-if(!confirm("Excluir boleto?")) return;
+function renderizarBoletos(){
 
-boletos =
-boletos.filter(
-b=>b.id!==id
-);
+    const tbody =
+    document.getElementById("listaBoletos");
 
-salvar();
-listarBoletos();
+    const historico =
+    document.getElementById("historicoBoletos");
+
+    tbody.innerHTML = "";
+
+    historico.innerHTML = "";
+
+    let pagos = 0;
+    let pendentes = 0;
+    let vencidos = 0;
+
+    const filtroMes =
+    document.getElementById("filtroMes").value;
+
+    boletos.forEach((boleto,index)=>{
+
+        const hoje = new Date();
+
+        const dataVencimento =
+        new Date(boleto.vencimento);
+
+        let statusAtual = boleto.status;
+
+        if(
+            statusAtual === "Pendente" &&
+            dataVencimento < hoje
+        ){
+            statusAtual = "Vencido";
+        }
+
+        if(statusAtual === "Pago"){
+            pagos++;
+        }
+        else if(statusAtual === "Pendente"){
+            pendentes++;
+        }
+        else{
+            vencidos++;
+        }
+
+        if(filtroMes){
+
+            const mesBoleto =
+            boleto.vencimento.substring(0,7);
+
+            if(mesBoleto !== filtroMes){
+                return;
+            }
+        }
+
+        tbody.innerHTML += `
+            <tr>
+
+                <td>${boleto.nome}</td>
+
+                <td>
+                    R$ ${Number(boleto.valor)
+                    .toFixed(2)}
+                </td>
+
+                <td>
+                    ${boleto.vencimento}
+                </td>
+
+                <td>
+                    ${statusAtual}
+                </td>
+
+                <td>
+
+                    <div class="acoes">
+
+                        ${
+                            statusAtual !== "Pago"
+                            ?
+                            `
+                            <button
+                                class="btn-pago"
+                                onclick="marcarPago(${index})">
+                                Pago
+                            </button>
+                            `
+                            :
+                            ""
+                        }
+
+                        <button
+                            class="btn-excluir"
+                            onclick="excluirBoleto(${index})">
+                            Excluir
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+        `;
+
+        historico.innerHTML += `
+            <tr>
+
+                <td>${boleto.nome}</td>
+
+                <td>
+                    R$ ${Number(boleto.valor)
+                    .toFixed(2)}
+                </td>
+
+                <td>
+                    ${boleto.vencimento}
+                </td>
+
+                <td>
+                    ${statusAtual}
+                </td>
+
+            </tr>
+        `;
+    });
+
+    document.getElementById("totalPagos")
+    .innerText = pagos;
+
+    document.getElementById("totalPendentes")
+    .innerText = pendentes;
+
+    document.getElementById("totalVencidos")
+    .innerText = vencidos;
 }
 
-function listarBoletos(){
+/*
+=========================================
+ MARCAR COMO PAGO
+=========================================
+*/
 
-const lista =
-document.getElementById("lista");
+function marcarPago(index){
 
-const filtro =
-document.getElementById("filtroMes").value;
+    boletos[index].status = "Pago";
 
-lista.innerHTML="";
+    salvarLocal();
 
-let pago=0;
-let aberto=0;
-let vencido=0;
-let qtdVencidos=0;
+    enviarGoogleSheets();
 
-const hoje =
-new Date();
-
-boletos.forEach(b=>{
-
-if(filtro && b.mes!==filtro) return;
-
-const dataVenc =
-new Date(b.vencimento);
-
-const atrasado =
-!b.pago && dataVenc < hoje;
-
-if(b.pago){
-pago += b.valor;
-}else{
-aberto += b.valor;
+    renderizarBoletos();
 }
 
-if(atrasado){
-vencido += b.valor;
-qtdVencidos++;
+/*
+=========================================
+ EXCLUIR
+=========================================
+*/
+
+function excluirBoleto(index){
+
+    if(confirm("Deseja excluir este boleto?")){
+
+        boletos.splice(index,1);
+
+        salvarLocal();
+
+        enviarGoogleSheets();
+
+        renderizarBoletos();
+    }
 }
 
-const div =
-document.createElement("div");
+/*
+=========================================
+ BACKUP
+=========================================
+*/
 
-div.className =
-"boleto " +
-(b.pago ? "pago" :
-(atrasado ? "vencido":""));
+function fazerBackup(){
 
-div.innerHTML=`
-<strong>${b.nome}</strong><br>
-Valor: R$ ${b.valor.toFixed(2)}<br>
-Vencimento: ${b.vencimento}<br>
-Mês: ${b.mes}<br>
-Status:
-${b.pago ? "✅ Pago" :
-(atrasado ? "⚠️ Vencido":"⏳ Em aberto")}
+    const dados =
+    JSON.stringify(boletos,null,2);
 
-<div class="acoes">
-<button class="btnPago"
-onclick="marcarPago(${b.id})">
-${b.pago ? "Desfazer":"Marcar Pago"}
-</button>
+    const blob = new Blob([dados],{
+        type:"application/json"
+    });
 
-<button class="btnExcluir"
-onclick="excluirBoleto(${b.id})">
-Excluir
-</button>
-</div>
-`;
+    const url =
+    URL.createObjectURL(blob);
 
-lista.appendChild(div);
+    const a =
+    document.createElement("a");
 
-});
+    a.href = url;
 
-document.getElementById(
-"totalPago"
-).innerText =
-"R$ "+pago.toFixed(2);
+    a.download =
+    "backup_boletos.json";
 
-document.getElementById(
-"totalAberto"
-).innerText =
-"R$ "+aberto.toFixed(2);
+    a.click();
 
-document.getElementById(
-"totalVencido"
-).innerText =
-"R$ "+vencido.toFixed(2);
+    URL.revokeObjectURL(url);
 
-const alerta =
-document.getElementById("alertas");
-
-if(qtdVencidos>0){
-alerta.innerHTML=`
-<div class="alerta">
-⚠️ Você possui
-${qtdVencidos}
-boleto(s) vencido(s).
-</div>`;
-}else{
-alerta.innerHTML="";
+    alert("Backup realizado!");
 }
 
+/*
+=========================================
+ RESTAURAR BACKUP
+=========================================
+*/
+
+function restaurarBackup(event){
+
+    const arquivo =
+    event.target.files[0];
+
+    if(!arquivo){
+        return;
+    }
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(e){
+
+        try{
+
+            const dados =
+            JSON.parse(e.target.result);
+
+            if(!Array.isArray(dados)){
+
+                alert("Arquivo inválido!");
+
+                return;
+            }
+
+            boletos = dados;
+
+            salvarLocal();
+
+            renderizarBoletos();
+
+            enviarGoogleSheets();
+
+            alert("Backup restaurado!");
+
+        }
+        catch(erro){
+
+            alert("Erro ao restaurar backup!");
+
+            console.log(erro);
+        }
+    };
+
+    reader.readAsText(arquivo);
 }
 
-function exportarBackup(){
+/*
+=========================================
+ GOOGLE PLANILHAS
+=========================================
 
-const blob =
-new Blob(
-[JSON.stringify(boletos)],
-{type:"application/json"}
-);
+1 - Crie uma planilha no Google Sheets
 
-const a =
-document.createElement("a");
+2 - Vá em:
+Extensões > Apps Script
 
-a.href =
-URL.createObjectURL(blob);
+3 - Cole este código:
 
-a.download =
-"backup-boletos.json";
+-----------------------------------------
 
-a.click();
+function doPost(e) {
+
+  var sheet = SpreadsheetApp
+    .openById("ID_DA_PLANILHA")
+    .getSheetByName("Página1");
+
+  var dados =
+  JSON.parse(e.postData.contents);
+
+  sheet.clearContents();
+
+  sheet.appendRow([
+    "Nome",
+    "Valor",
+    "Vencimento",
+    "Status"
+  ]);
+
+  dados.forEach(function(item){
+
+    sheet.appendRow([
+      item.nome,
+      item.valor,
+      item.vencimento,
+      item.status
+    ]);
+
+  });
+
+  return ContentService
+    .createTextOutput("OK")
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
-function importarBackup(event){
+-----------------------------------------
 
-const arquivo =
-event.target.files[0];
+4 - Clique em:
+Implantar > Nova implantação
 
-if(!arquivo) return;
+5 - Tipo:
+Aplicativo da Web
 
-const leitor =
-new FileReader();
+6 - Permissão:
+Qualquer pessoa
 
-leitor.onload =
-function(e){
+7 - Copie a URL gerada
 
-boletos =
-JSON.parse(e.target.result);
+8 - Cole abaixo:
+*/
 
-salvar();
-listarBoletos();
+const GOOGLE_SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbz-9G4gPWdK4eNLNTAB0cFfev2HDx8XJ0VwisCFPULvBHZAiXQsTY-ZnSotf6d4U3my/exec";
 
-alert("Backup restaurado!");
-};
+function enviarGoogleSheets(){
 
-leitor.readAsText(arquivo);
+    if(
+        GOOGLE_SCRIPT_URL ===
+        "https://script.google.com/macros/s/AKfycbz-9G4gPWdK4eNLNTAB0cFfev2HDx8XJ0VwisCFPULvBHZAiXQsTY-ZnSotf6d4U3my/exec"
+    ){
+        return;
+    }
+
+    fetch(GOOGLE_SCRIPT_URL,{
+
+        method:"POST",
+
+        body:JSON.stringify(boletos)
+
+    })
+    .then(res=>res.text())
+    .then(msg=>{
+
+        console.log(
+            "Google Sheets:",
+            msg
+        );
+
+    })
+    .catch(err=>{
+
+        console.log(err);
+
+    });
 }
-async function restaurarDaNuvem(){
 
-try{
-
-const resposta =
-await fetch(API);
-
-const dados =
-await resposta.json();
-
-console.log(dados);
-
-alert(
-"Foram encontrados "
-+ (dados.length - 1)
-+ " registros."
-);
-
-}catch(erro){
-
-alert("Erro ao restaurar");
-
-}
-
-}
-    
-listarBoletos();
+renderizarBoletos();
 
 </script>
 
